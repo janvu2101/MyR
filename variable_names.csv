@@ -1,0 +1,47 @@
+﻿variable;label
+SHEET;sheet number (unique store id)
+CHAIN;"chain 1=bk; 2=kfc; 3=roys; 4=wendys"
+CO_OWNED;1 if company owned
+STATE;"1 if NJ; 0 if Pa"
+SOUTHJ;1 if in southern NJ
+CENTRALJ;1 if in central NJ
+NORTHJ;1 if in northern NJ
+PA1;1 if in PA, northeast suburbs of Phila
+PA2;1 if in PA, Easton etc
+SHORE;1 if on NJ shore
+NCALLS;number of call-backs*
+EMPFT;# full-time employees
+EMPPT;# part-time employees
+NMGRS;# managers/ass't managers
+WAGE_ST;starting wage ($/hr)
+INCTIME;months to usual first raise
+FIRSTINC;usual amount of first raise ($/hr)
+BONUS;1 if cash bounty for new workers
+PCTAFF;% employees affected by new minimum
+MEALS;free/reduced price code (See below)
+OPEN;hour of opening
+HRSOPEN;number hrs open per day
+PSODA;price of medium soda, including tax
+PFRY;price of small fries, including tax
+PENTREE;price of entree, including tax
+NREGS;number of cash registers in store
+NREGS11;number of registers open at 11:00 am
+TYPE2;"type 2nd interview 1=phone; 2=personal"
+STATUS2;status of second interview: see below
+DATE2;date of second interview MMDDYY format
+NCALLS2;number of call-backs*
+EMPFT2;# full-time employees
+EMPPT2;# part-time employees
+NMGRS2;# managers/ass't managers
+WAGE_ST2;starting wage ($/hr)
+INCTIME2;months to usual first raise
+FIRSTIN2;usual amount of first raise ($/hr)
+SPECIAL2;1 if special program for new workers
+MEALS2;free/reduced price code (See below)
+OPEN2R;hour of opening
+HRSOPEN2;number hrs open per day
+PSODA2;price of medium soda, including tax
+PFRY2;price of small fries, including tax
+PENTREE2;price of entree, including tax
+NREGS2;number of cash registers in store
+NREGS112;number of registers open at 11:00 am
