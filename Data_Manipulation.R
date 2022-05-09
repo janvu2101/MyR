@@ -94,7 +94,7 @@ never_takers <- data.frame(condition = 1,
                            takeup = 0)
 
 ## Convert data type of item1,2,3 to factor
-#useing loops
+#using loops
 for (i in names(control)) {
   control[[i]] <- as.numeric(control[[i]])
 }
@@ -131,6 +131,12 @@ experiment_simulation <- rbind(control,compliers,never_takers)
 experiment_simulation <- experiment_simulation %>%
   select(-item1:-item3)
 names(experiment_simulation)
+head(experiment_simulation, 7)
+str(experiment_simulation)
+experiment_simulation$condition <- as.numeric(experiment_simulation$condition)
+experiment_simulation$condition[experiment_simulation$condition == 0] <- "control group"
+experiment_simulation$condition[experiment_simulation$condition == 1] <- "treatment group"
+experiment_simulation$condition <- as.factor(experiment_simulation$condition)
 
 #Basic queries
 ## Column index
@@ -147,7 +153,7 @@ practice_subset <- data.frame(subset1 = sample(x = 1:3, size = 10, replace = TRU
 )
 names(practice_subset)
 subset <- practice_subset[sample(nrow(practice_subset), 3), ]
-View(subset)
+head(subset, 10)
 
 #Gather vs Spread data
 ## We need tidyverse (tidyr) to perform these operations
