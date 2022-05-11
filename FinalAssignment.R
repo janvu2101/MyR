@@ -1,10 +1,12 @@
 install.packages("knitr")
+install.packages("ggthemes")
 library(tidyverse)
 library(dplyr)
 library(tidyr)
 library(rio)
 library(knitr)
 library(ggplot2)
+library(ggthemes)
 
 #EXERCISE 1: REPLICATE FIGURE 4
 ##Load dataset
@@ -45,6 +47,8 @@ tmp1 <- df %>%
 tmp2 <- df %>%
   select(name, year, log_foreign_freshmen) %>%
   filter(year == 2005 | year == 2012)
+nrow(tmp1)
+nrow(tmp2)
 nrow(tmp1) == nrow(tmp2)
 
 sum(is.na(tmp1$log_real_approp))
@@ -78,9 +82,21 @@ df_fig4$Private[df_fig4$Private == 2] <- "Private"
 
 
 ## Replicate Figure 4 using ggplot, including all the features such as fitted lines, labels and colors. If you want to make it prettier, feel free to be creative
-fig4 <- ggplot(data = df_fig4) +
-  geom_point(mapping  = aes(x = change_logreal, y = change_logforeign, color = Private, shape = Private))
-fig4
+fig4 <- ggplot(data = df_fig4, aes(x  = change_logreal, y = change_logforeign, color = Private, shape = Private)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("darkred","#0567B9")) +
+  scale_shape_manual(values = c(0,16)) +
+  geom_text(label = df_fig4$name, size = 2, vjust = 0, nudge_y = 0.1, show.legend = FALSE) +
+  geom_smooth(method = "lm", formula = "y ~ x", se = FALSE, show.legend = FALSE, size=0.5) +
+  ylim (-0.4,3) +
+  labs(x = "Change in log(total appropriations in state)",
+       y = "Change in log(foreign freshmen)")
+fig4 + 
+  theme_classic(base_size = 14) +
+  ggtitle("AAU (2005-2012)") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) +
+  theme(axis.title = element_text(size = 12)) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.position = c(0.89,0.9), legend.box.background = element_rect(fill = "white", color = "black"))
 
 #EXERCISE 2: REPLICATE TABLE 2
 
