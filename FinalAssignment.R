@@ -12,7 +12,6 @@ library(ggthemes)
 ##Load dataset
 data_original <- rio::import("data/pub_pvt_scatters.dta")
 uniid <- rio::import("data/univ_names.xlsx")
-unidata <- rio::import("data/univ_data.dta")
 
 ##Merge df with uniid name
 df <- merge(data_original, uniid, by="unitid", all = FALSE) #keep only obs that belong to the common university ID between 2 data frames
@@ -99,7 +98,24 @@ fig4 +
   theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.position = c(0.89,0.9), legend.box.background = element_rect(fill = "white", color = "black"))
 
 #EXERCISE 2: REPLICATE TABLE 2
+## Load dataset 
+unidata <- rio::import("data/univ_data.dta")
 
+## Create variable for total state appropriation
+unidata$total_state_ap <- unidata$nominal_approp - unidata$state_ap*100000
+
+## Find balanced sample
+balanced <- unidata %>% 
+  drop_na(ENROLL_FRESH_NON_RES_ALIEN_DEG, AMERICAN_OOS, IN_STATE_FRESHMEN) %>%
+  select(unitid, year, AAU, Research, nonResearch, l_ENROLL_FRESH_NON_RES_ALIEN_DEG, l_state_ap, l_population, total_state_ap, weight, ENROLL_FRESH_NON_RES_ALIEN_DEG, AMERICAN_OOS, IN_STATE_FRESHMEN)
+
+apply(is.na(balanced[, c("ENROLL_FRESH_NON_RES_ALIEN_DEG","AMERICAN_OOS","IN_STATE_FRESHMEN")]), 2, sum) #sum return the count, which returns the position
+dim(balanced)
+
+## Run the regression
+View(balanced)
+
+names(unidata)
 
 #SELF-SEARCHED:
 a <- c(3, 5, 12, 9, 4, 8)
