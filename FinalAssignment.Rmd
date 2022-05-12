@@ -35,19 +35,128 @@ uniid <- rio::import("data/univ_names.xlsx")
 
 ## Merge data
 
+*When we merge 2 dataframes we only keep obs of common university ID
+```{r, echo=TRUE}
+df <- merge(data_original, uniid, by="unitid", all = FALSE)
+```
+
+*We reorder the columns for better view
+
+```{r, echo=TRUE}
+df <- dplyr::relocate(df, name, .after = unitid)
+```
+
 ## Create a common deflator
+
+```{r}
+library(dplyr)
+df <- df %>%
+  group_by(year) %>%
+  mutate(cpi_all = mean(cpi, na.rm = TRUE))
+```
 
 ## Create the real value of the appropriation
 
+```{r}
+df$real_approp <- df$nominal_approp / df$cpi_all
+```
+
 ## Differentiate public and private university
+
+```{r}
+df$Private <- as.factor(df$Private)
+class(df$Private)
+```
 
 ## Reorder data by unit and by year
 
+```{r}
+df <- df %>% arrange(unitid, year)
+```
+
 ## Create log of variable
+
+```{r}
+df <- df %>%
+  mutate(log_real_approp = log(real_approp))
+df <- df %>%
+  mutate(log_foreign_freshmen = log(ENROLL_FRESH_NON_RES_ALIEN_DEG))
+```
 
 ## Create difference in log values by university between 2005 and 2012
 
+*We first create 2 temporary dataframes, one for log_real_approp and another for log_foreign_freshmen
+
+```{r}
+tmp1 <- df %>% 
+  select(name, year, log_real_approp) %>%
+  filter(year == 2005 | year == 2012)
+tmp2 <- df %>%
+  select(name, year, log_foreign_freshmen) %>%
+  filter(year == 2005 | year == 2012)
+```
+
+*Calculate the difference between 2005 and 2012 for log_real_approp
+
+```{r}
+tmp1 <- tmp1 %>%
+  tidyr::spread(key = "year", value = "log_real_approp")
+tmp1 <- as.data.frame(tmp1)
+tmp1$change_logreal <- tmp1$`2012` - tmp1$`2005`
+tmp1 <- tmp1 %>%
+  select(name, change_logreal)
+```
+
+*Calculate the difference between 2005 and 2012 for log_foreign_freshmen
+
+```{r}
+tmp2 <- tmp2 %>%
+  tidyr::spread(key = "year", value = "log_foreign_freshmen")
+tmp2 <- as.data.frame(tmp2)
+tmp2$change_logforeign <- tmp2$`2012`-tmp2$`2005`
+tmp2 <- tmp2 %>%
+  select(name, change_logforeign)
+```
+
+*Create a dataframe for the school type (whether private or public)
+
+```{r}
+tmp3 <- df %>%
+  as.data.frame() %>%
+  select(name, Private) %>%
+  distinct()
+```
+
+*Create dataframe for figure 4
+
+```{r}
+df_fig4 <- merge(x = tmp1, y = tmp2, by = "name")
+df_fig4 <- merge(x = df_fig4, y = tmp3, by = "name")
+df_fig4$Private <- as.integer(df_fig4$Private)
+df_fig4$Private[df_fig4$Private == 1] <- "Public"
+df_fig4$Private[df_fig4$Private == 2] <- "Private"
+```
+
 ## Replicate Figure 4
+
+```{r, warning=FALSE}
+library(ggplot2)
+fig4 <- ggplot(data = df_fig4, aes(x  = change_logreal, y = change_logforeign, color = Private, shape = Private)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("darkred","#0567B9")) +
+  scale_shape_manual(values = c(0,16)) +
+  geom_text(label = df_fig4$name, size = 2, vjust = 0, nudge_y = 0.1, show.legend = FALSE) +
+  geom_smooth(method = "lm", formula = "y ~ x", se = FALSE, show.legend = FALSE, size=0.5) +
+  ylim (-0.4,3) +
+  labs(x = "Change in log(total appropriations in state)",
+       y = "Change in log(foreign freshmen)")
+fig4 + 
+  theme_classic(base_size = 14) +
+  ggtitle("AAU (2005-2012)") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) +
+  theme(axis.title = element_text(size = 12)) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.position = c(0.89,0.9), legend.box.background = element_rect(fill = "white", color = "black"))
+```
 
 # EXERCISE 2: REPLICATE TABLE 2
 
