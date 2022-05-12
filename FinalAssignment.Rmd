@@ -13,6 +13,55 @@ monofont: 'Consolas'
 
 \newpage
 
+# LOAD LIBRARIES
+
+```{r, eval = FALSE}
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(rio)
+library(knitr)
+library(ggplot2)
+library(ggthemes)
+```
+
+# EXERCISE 1: REPLICATE FIGURE 4
+## Load the dataset
+
+```{r}
+data_original <- rio::import("data/pub_pvt_scatters.dta")
+uniid <- rio::import("data/univ_names.xlsx")
+```
+
+## Merge data
+
+## Create a common deflator
+
+## Create the real value of the appropriation
+
+## Differentiate public and private university
+
+## Reorder data by unit and by year
+
+## Create log of variable
+
+## Create difference in log values by university between 2005 and 2012
+
+## Replicate Figure 4
+
+# EXERCISE 2: REPLICATE TABLE 2
+
+## Load the dataset
+
+## Create variable for total state appropriation of all other universities within the same state
+
+## Find the balanced sample
+
+## Run the regression from table 2
+
+
+
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

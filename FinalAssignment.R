@@ -1,5 +1,6 @@
 install.packages("knitr")
 install.packages("ggthemes")
+install.packages("stargazer")
 library(tidyverse)
 library(dplyr)
 library(tidyr)
@@ -113,6 +114,12 @@ apply(is.na(balanced[, c("ENROLL_FRESH_NON_RES_ALIEN_DEG","AMERICAN_OOS","IN_STA
 dim(balanced)
 
 ## Run the regression
+install.packages("lfe")
+rio::export(balanced, "balanced.csv")
+library(lfe)
+library(stargazer)
+library(AER)
+
 View(balanced)
 
 names(unidata)
