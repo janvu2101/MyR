@@ -130,7 +130,7 @@ install.packages("lfe")
 library(lfe)
 library(stargazer)
 
-
+# pacman: https://www.linode.com/docs/guides/pacman-package-manager/
 rio::export(balanced, "balanced.csv")
 library(AER)
 
