@@ -127,10 +127,11 @@ dim(balanced)
 
 ## Run the regression
 install.packages("lfe")
-Yes
-rio::export(balanced, "balanced.csv")
 library(lfe)
 library(stargazer)
+
+
+rio::export(balanced, "balanced.csv")
 library(AER)
 
 View(balanced)
