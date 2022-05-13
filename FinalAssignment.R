@@ -1,6 +1,14 @@
 install.packages("knitr")
 install.packages("ggthemes")
 install.packages("stargazer")
+install.packages("tidyverse")
+install.packages("rio")
+install.packages(
+  "ggplot2",
+  dependencies = TRUE,
+  repos = c("http://rstudio.org/_packages",
+            "http://cran.rstudio.com")
+)
 library(tidyverse)
 library(dplyr)
 library(tidyr)
@@ -8,7 +16,7 @@ library(rio)
 library(knitr)
 library(ggplot2)
 library(ggthemes)
-
+R.Version()
 #EXERCISE 1: REPLICATE FIGURE 4
 ##Load dataset
 data_original <- rio::import("data/pub_pvt_scatters.dta")
@@ -97,6 +105,10 @@ fig4 +
   theme(plot.title = element_text(hjust = 0.5, size = 14)) +
   theme(axis.title = element_text(size = 12)) +
   theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.position = c(0.89,0.9), legend.box.background = element_rect(fill = "white", color = "black"))
+install.packages("labeling")
+library(labeling)
+install.packages("farver")
+library(farver)
 
 #EXERCISE 2: REPLICATE TABLE 2
 ## Load dataset 
