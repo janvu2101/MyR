@@ -116,11 +116,12 @@ unidata <- rio::import("data/univ_data.dta")
 
 ## Create variable for total state appropriation
 unidata$total_state_ap <- unidata$nominal_approp - unidata$state_ap*100000
-
+unidata$l_total_state_ap <- log(unidata$total_state_ap)
 ## Find balanced sample
+
 balanced <- unidata %>% 
   drop_na(ENROLL_FRESH_NON_RES_ALIEN_DEG, AMERICAN_OOS, IN_STATE_FRESHMEN) %>%
-  select(unitid, year, AAU, Research, nonResearch, l_ENROLL_FRESH_NON_RES_ALIEN_DEG, l_state_ap, l_population, total_state_ap, weight, ENROLL_FRESH_NON_RES_ALIEN_DEG, AMERICAN_OOS, IN_STATE_FRESHMEN)
+  select(unitid, year, AAU, Research, nonResearch, l_ENROLL_FRESH_NON_RES_ALIEN_DEG, l_state_ap, l_population, l_total_state_ap, weight, ENROLL_FRESH_NON_RES_ALIEN_DEG, AMERICAN_OOS, IN_STATE_FRESHMEN)
 
 apply(is.na(balanced[, c("ENROLL_FRESH_NON_RES_ALIEN_DEG","AMERICAN_OOS","IN_STATE_FRESHMEN")]), 2, sum) #sum return the count, which returns the position
 dim(balanced)
@@ -130,14 +131,57 @@ install.packages("lfe")
 library(lfe)
 library(stargazer)
 
+# 3 data frames for 3 groups: Research, nonResearch, and AAU
+research <- balanced %>% filter(Research == 1)
+nonResearch <- balanced %>% filter(nonResearch == 1)
+AAU <- balanced %>% filter(AAU == 1)
+nrow(research) #different from the article
+nrow(nonResearch) #different from the article
+nrow(AAU) #different from the article
+
+
+# 1st stage regression
+research_1st <- felm(l_state_ap ~ l_total_state_ap | unitid | 0| unitid, data = research)
+summary(research_1st)
+
+nonResearch_1st <- felm(l_state_ap ~ l_total_state_ap | unitid | 0| 0, data = nonResearch)
+summary(nonResearch_1st)
+
+AAU_1st <- felm(l_state_ap ~ l_total_state_ap | unitid | 0 | 0, data = AAU)
+summary(AAU_1st)
+
+# 2nd stage regression with IV 
+
+research_ols <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population | unitid | 0 | unitid, data = research)
+summary(research_ols, robust = TRUE)
+research_IV <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population | year | l_total_state_ap, weights = research$weight, data = research)
+summary(research_IV)
+
+
+# END #
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+View(balanced)
 # pacman: https://www.linode.com/docs/guides/pacman-package-manager/
 rio::export(balanced, "balanced.csv")
 library(AER)
 
 View(balanced)
-
+names(balanced)
 names(unidata)
-
+names(df)
 #SELF-SEARCHED:
 a <- c(3, 5, 12, 9, 4, 8)
 b <- c(2, 10, 6, 1, 7, 4)
