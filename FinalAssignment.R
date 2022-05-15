@@ -90,6 +90,26 @@ df_fig4$Private[df_fig4$Private == 2] <- "Private"
 
 
 ## Replicate Figure 4 using ggplot, including all the features such as fitted lines, labels and colors. If you want to make it prettier, feel free to be creative
+
+png(filename = "figure4.png", unit = "cm", width = 12, height = 12, res = 800)
+
+ggplot(data = df_fig4, aes(x  = change_logreal, y = change_logforeign, color = Private, shape = Private)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("darkred","#0567B9")) +
+  scale_shape_manual(values = c(0,16)) +
+  geom_text(label = df_fig4$name, size = 2, vjust = 0, nudge_y = 0.1, show.legend = FALSE) +
+  geom_smooth(method = "lm", formula = "y ~ x", se = FALSE, show.legend = FALSE, size=0.5) +
+  ylim (-0.4,3) +
+  labs(x = "Change in log(total appropriations in state)",
+       y = "Change in log(foreign freshmen)") +
+  theme_classic(base_size = 14) +
+  ggtitle("AAU (2005-2012)") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) +
+  theme(axis.title = element_text(size = 12)) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.position = c(0.89,0.9), legend.box.background = element_rect(fill = "white", color = "black"))
+
+dev.off()
+
 fig4 <- ggplot(data = df_fig4, aes(x  = change_logreal, y = change_logforeign, color = Private, shape = Private)) +
   geom_point(size = 2) +
   scale_color_manual(values = c("darkred","#0567B9")) +
@@ -105,6 +125,8 @@ fig4 +
   theme(plot.title = element_text(hjust = 0.5, size = 14)) +
   theme(axis.title = element_text(size = 12)) +
   theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.position = c(0.89,0.9), legend.box.background = element_rect(fill = "white", color = "black"))
+
+
 install.packages("labeling")
 library(labeling)
 install.packages("farver")
@@ -142,17 +164,17 @@ nrow(AAU) #different from the article
 ## OLS regression
 nrow(research %>%
   drop_na(l_ENROLL_FRESH_NON_RES_ALIEN_DEG, l_state_ap, l_population))
-research_ols <- lm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population, data = research)
+research_ols <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population | unitid + year | 0 | unitid, data = research, weights = research$weight)
 summary(research_ols)
 
 nrow(nonResearch %>%
   drop_na(l_ENROLL_FRESH_NON_RES_ALIEN_DEG, l_state_ap, l_population))
-nonResearch_ols <- lm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population, data = nonResearch)
+nonResearch_ols <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population | unitid + year | 0 | unitid, data = nonResearch, weights = nonResearch$weight)
 summary(nonResearch_ols)
 
 nrow(AAU %>%
        drop_na(l_ENROLL_FRESH_NON_RES_ALIEN_DEG, l_state_ap, l_population))
-AAU_ols <- lm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population, data = AAU)
+AAU_ols <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population | unitid + year | 0 | unitid, data = AAU, weights = AAU$weight)
 summary(AAU_ols)
 
 # 1st stage regression
@@ -176,6 +198,27 @@ summary(nonResearch_iv, robust = TRUE)
 AAU_iv <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_population | unitid + year | (l_state_ap ~ l_total_state_ap) | state_of_college, data = AAU, weights = AAU$weight)
 summary(AAU_iv, robust = TRUE)
 
+# Arrange the regression result onto the table
+stargazer(research_1st, nonResearch_1st, AAU_1st, type = 'html', out = "test.html")
+stargazer(research_1st, AAU_1st, nonResearch_1st, 
+          title = "TABLE 2.b - EFFECTS OF LN(STATE APPROPRIATIONS) ON LN(FIRST-YEAR FOREIGN ENROLLMENT), 1996-2012", 
+          dep.var.labels = c("ln(state appropriation)"),
+          covariate.labels = c("ln(appropriation_other in state)"),
+          omit.stat = c("LL", "f", "ser", "adj.rsq","n"),
+          no.space = TRUE,
+          align = TRUE, 
+          type = 'html',
+          out =  "1ststage.html") #get regression statistics different, # obs slightly different.
+stargazer(research_ols, research_iv, AAU_ols, AAU_iv, nonResearch_ols, nonResearch_iv, 
+          title = "TABLE 2.b - EFFECTS OF LN(OTHER UNIVERSITIES IN THE STATE) ON LN(STATE APPROPRIATIONS), 1996-2012", 
+          dep.var.labels = c("ln(foreign first year enrollment)"),
+          covariate.labels = c("ln(state app ols)", "ln(population)", "ln(state app iv)"),
+          omit.stat = c("LL", "f", "ser", "adj.rsq"),
+          no.space = TRUE,
+          align = TRUE, 
+          type = 'html',
+          out = "ols_2ndstage.html"
+          )
 
 
 # END #
