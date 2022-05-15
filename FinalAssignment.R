@@ -120,8 +120,8 @@ unidata$l_total_state_ap <- log(unidata$total_state_ap)
 ## Find balanced sample
 
 balanced <- unidata %>% 
-  drop_na(ENROLL_FRESH_NON_RES_ALIEN_DEG, AMERICAN_OOS, IN_STATE_FRESHMEN) %>%
-  select(unitid, year, AAU, Research, nonResearch, l_ENROLL_FRESH_NON_RES_ALIEN_DEG, l_state_ap, l_population, l_total_state_ap, weight, ENROLL_FRESH_NON_RES_ALIEN_DEG, AMERICAN_OOS, IN_STATE_FRESHMEN)
+  drop_na(ENROLL_FRESH_NON_RES_ALIEN_DEG, AMERICAN_OOS, IN_STATE_FRESHMEN)# %>%
+  #select(unitid, year, AAU, Research, nonResearch, state_of_college, l_ENROLL_FRESH_NON_RES_ALIEN_DEG, l_state_ap, l_population, l_total_state_ap, weight, ENROLL_FRESH_NON_RES_ALIEN_DEG, AMERICAN_OOS, IN_STATE_FRESHMEN)
 
 apply(is.na(balanced[, c("ENROLL_FRESH_NON_RES_ALIEN_DEG","AMERICAN_OOS","IN_STATE_FRESHMEN")]), 2, sum) #sum return the count, which returns the position
 dim(balanced)
@@ -139,23 +139,43 @@ nrow(research) #different from the article
 nrow(nonResearch) #different from the article
 nrow(AAU) #different from the article
 
+## OLS regression
+nrow(research %>%
+  drop_na(l_ENROLL_FRESH_NON_RES_ALIEN_DEG, l_state_ap, l_population))
+research_ols <- lm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population, data = research)
+summary(research_ols)
+
+nrow(nonResearch %>%
+  drop_na(l_ENROLL_FRESH_NON_RES_ALIEN_DEG, l_state_ap, l_population))
+nonResearch_ols <- lm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population, data = nonResearch)
+summary(nonResearch_ols)
+
+nrow(AAU %>%
+       drop_na(l_ENROLL_FRESH_NON_RES_ALIEN_DEG, l_state_ap, l_population))
+AAU_ols <- lm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population, data = AAU)
+summary(AAU_ols)
 
 # 1st stage regression
-research_1st <- felm(l_state_ap ~ l_total_state_ap | unitid | 0| unitid, data = research)
+research_1st <- felm(l_state_ap ~ l_total_state_ap | unitid + year | 0 | state_of_college, data = research)
 summary(research_1st)
 
-nonResearch_1st <- felm(l_state_ap ~ l_total_state_ap | unitid | 0| 0, data = nonResearch)
+nonResearch_1st <- felm(l_state_ap ~ l_total_state_ap | unitid + year | 0 | state_of_college, data = nonResearch, weights = nonResearch$weight)
 summary(nonResearch_1st)
 
-AAU_1st <- felm(l_state_ap ~ l_total_state_ap | unitid | 0 | 0, data = AAU)
+AAU_1st <- felm(l_state_ap ~ l_total_state_ap | unitid + year | 0 | state_of_college, data = AAU, weights = AAU$weight)
 summary(AAU_1st)
 
 # 2nd stage regression with IV 
 
-research_ols <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population | unitid | 0 | unitid, data = research)
-summary(research_ols, robust = TRUE)
-research_IV <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population | year | l_total_state_ap, weights = research$weight, data = research)
-summary(research_IV)
+research_iv <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_population | unitid + year | (l_state_ap ~ l_total_state_ap) | state_of_college, data = research, weights = research$weight)
+summary(research_iv, robust = TRUE)
+
+nonResearch_iv <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_population | unitid + year | (l_state_ap ~ l_total_state_ap) | state_of_college, data = nonResearch, weights = nonResearch$weight)
+summary(nonResearch_iv, robust = TRUE)
+
+AAU_iv <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_population | unitid + year | (l_state_ap ~ l_total_state_ap) | state_of_college, data = AAU, weights = AAU$weight)
+summary(AAU_iv, robust = TRUE)
+
 
 
 # END #
