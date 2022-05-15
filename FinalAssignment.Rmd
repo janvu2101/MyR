@@ -35,20 +35,25 @@ uniid <- rio::import("data/univ_names.xlsx")
 
 ## Merge data
 
-*When we merge 2 dataframes we only keep obs of common university ID
-```{r, echo=TRUE}
+- Steps:
+
+    + When we merge 2 data frames we only keep obs of common university ID
+    + We reorder the columns for better view
+
+- Command: 
+
+```{r}
 df <- merge(data_original, uniid, by="unitid", all = FALSE)
 ```
 
-*We reorder the columns for better view
 
-```{r, echo=TRUE}
+```{r}
 df <- dplyr::relocate(df, name, .after = unitid)
 ```
 
 ## Create a common deflator
 
-```{r}
+```{r, warning=FALSE, message = FALSE}
 library(dplyr)
 df <- df %>%
   group_by(year) %>%
@@ -65,13 +70,16 @@ df$real_approp <- df$nominal_approp / df$cpi_all
 
 ```{r}
 df$Private <- as.factor(df$Private)
+```
+
+```{r, eval=FALSE}
 class(df$Private)
 ```
 
 ## Reorder data by unit and by year
 
 ```{r}
-df <- df %>% arrange(unitid, year)
+df <- df %>% dplyr::arrange(unitid, year)
 ```
 
 ## Create log of variable
@@ -85,7 +93,7 @@ df <- df %>%
 
 ## Create difference in log values by university between 2005 and 2012
 
-*We first create 2 temporary dataframes, one for log_real_approp and another for log_foreign_freshmen
+- We first create 2 temporary data frames, one for log_real_approp and another for log_foreign_freshmen
 
 ```{r}
 tmp1 <- df %>% 
@@ -96,7 +104,7 @@ tmp2 <- df %>%
   filter(year == 2005 | year == 2012)
 ```
 
-*Calculate the difference between 2005 and 2012 for log_real_approp
+- Calculate the difference between 2005 and 2012 for log_real_approp
 
 ```{r}
 tmp1 <- tmp1 %>%
@@ -107,7 +115,7 @@ tmp1 <- tmp1 %>%
   select(name, change_logreal)
 ```
 
-*Calculate the difference between 2005 and 2012 for log_foreign_freshmen
+- Calculate the difference between 2005 and 2012 for log_foreign_freshmen
 
 ```{r}
 tmp2 <- tmp2 %>%
@@ -118,7 +126,7 @@ tmp2 <- tmp2 %>%
   select(name, change_logforeign)
 ```
 
-*Create a dataframe for the school type (whether private or public)
+- Create a data frame for the school type (whether private or public)
 
 ```{r}
 tmp3 <- df %>%
@@ -127,7 +135,7 @@ tmp3 <- df %>%
   distinct()
 ```
 
-*Create dataframe for figure 4
+- Create data frame for figure 4
 
 ```{r}
 df_fig4 <- merge(x = tmp1, y = tmp2, by = "name")
@@ -139,9 +147,11 @@ df_fig4$Private[df_fig4$Private == 2] <- "Private"
 
 ## Replicate Figure 4
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=FALSE}
 library(ggplot2)
-fig4 <- ggplot(data = df_fig4, aes(x  = change_logreal, y = change_logforeign, color = Private, shape = Private)) +
+png(filename = "figure4.png", unit = "cm", width = 12, height = 12, res = 800)
+
+ggplot(data = df_fig4, aes(x  = change_logreal, y = change_logforeign, color = Private, shape = Private)) +
   geom_point(size = 2) +
   scale_color_manual(values = c("darkred","#0567B9")) +
   scale_shape_manual(values = c(0,16)) +
@@ -149,49 +159,147 @@ fig4 <- ggplot(data = df_fig4, aes(x  = change_logreal, y = change_logforeign, c
   geom_smooth(method = "lm", formula = "y ~ x", se = FALSE, show.legend = FALSE, size=0.5) +
   ylim (-0.4,3) +
   labs(x = "Change in log(total appropriations in state)",
-       y = "Change in log(foreign freshmen)")
-fig4 + 
+       y = "Change in log(foreign freshmen)") +
   theme_classic(base_size = 14) +
   ggtitle("AAU (2005-2012)") +
   theme(plot.title = element_text(hjust = 0.5, size = 14)) +
   theme(axis.title = element_text(size = 12)) +
   theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.position = c(0.89,0.9), legend.box.background = element_rect(fill = "white", color = "black"))
+
+dev.off()
 ```
+
+![Figure 4. FOREIGN ENROLLMENT AND STATE LEVEL APPROPRIATION TO HIGHER EDUCATION: AAU UNIVERSITY, 2005-2012](assets/images/figure4.png)
 
 # EXERCISE 2: REPLICATE TABLE 2
 
 ## Load the dataset
 
+```{r}
+unidata <- rio::import("data/univ_data.dta")
+```
+
 ## Create variable for total state appropriation of all other universities within the same state
+
+```{r}
+unidata$total_state_ap <- unidata$nominal_approp - unidata$state_ap*100000
+unidata$l_total_state_ap <- log(unidata$total_state_ap)
+```
 
 ## Find the balanced sample
 
+```{r, warning=FALSE, message=FALSE}
+library(tidyr)
+balanced <- unidata %>% 
+  drop_na(ENROLL_FRESH_NON_RES_ALIEN_DEG, AMERICAN_OOS, IN_STATE_FRESHMEN)
+```
+
 ## Run the regression from table 2
 
+* Load library **lfe** and **stargazer**
 
-
-
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r, warning=FALSE, message=FALSE}
+library(lfe)
+library(stargazer)
 ```
 
-## R Markdown
+* Create data frame for each group: research, AAU and nonResearch
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+research <- balanced %>% filter(Research == 1)
+nonResearch <- balanced %>% filter(nonResearch == 1)
+AAU <- balanced %>% filter(AAU == 1)
 ```
 
-## Including Plots
+* Run **OLS** regression
 
-You can also embed plots, for example:
+```{r}
+research_ols <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population | unitid + year | 0 | unitid, data = research, weights = research$weight)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+nonResearch_ols <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population | unitid + year | 0 | unitid, data = nonResearch, weights = nonResearch$weight)
+
+AAU_ols <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_state_ap + l_population | unitid + year | 0 | unitid, data = AAU, weights = AAU$weight)
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+* Run **1st stage** regression
+
+```{r}
+research_1st <- felm(l_state_ap ~ l_total_state_ap | unitid + year | 0 | state_of_college, data = research)
+
+nonResearch_1st <- felm(l_state_ap ~ l_total_state_ap | unitid + year | 0 | state_of_college, data = nonResearch, weights = nonResearch$weight)
+
+AAU_1st <- felm(l_state_ap ~ l_total_state_ap | unitid + year | 0 | state_of_college, data = AAU, weights = AAU$weight)
+```
+
+* Run **2nd stage** regression
+
+```{r}
+research_iv <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_population | unitid + year | (l_state_ap ~ l_total_state_ap) | state_of_college, data = research, weights = research$weight)
+
+nonResearch_iv <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_population | unitid + year | (l_state_ap ~ l_total_state_ap) | state_of_college, data = nonResearch, weights = nonResearch$weight)
+
+AAU_iv <- felm(l_ENROLL_FRESH_NON_RES_ALIEN_DEG ~ l_population | unitid + year | (l_state_ap ~ l_total_state_ap) | state_of_college, data = AAU, weights = AAU$weight)
+```
+
+## Arrange regression result onto the table
+
+* Table for **1st stage** regression
+
+```{r, eval=FALSE}
+stargazer(research_1st, AAU_1st, nonResearch_1st, 
+          title = "TABLE 2.b - EFFECTS OF LN(STATE APPROPRIATIONS) ON LN(FIRST-YEAR FOREIGN ENROLLMENT), 1996-2012", 
+          dep.var.labels = c("ln(state appropriation)"),
+          covariate.labels = c("ln(appropriation_other in state)"),
+          omit.stat = c("LL", "f", "ser", "adj.rsq","n"),
+          no.space = TRUE,
+          align = TRUE, 
+          type = 'html',
+          out =  "1ststage.html")
+```
+
+![Panel B - First Stage](assets/images/1st_stage.png)
+
+* Table for **OLS** and **2nd stage** regression
+
+```{r, eval=FALSE}
+stargazer(research_1st, AAU_1st, nonResearch_1st, 
+          title = "TABLE 2.b - EFFECTS OF LN(STATE APPROPRIATIONS) ON LN(FIRST-YEAR FOREIGN ENROLLMENT), 1996-2012", 
+          dep.var.labels = c("ln(state appropriation)"),
+          covariate.labels = c("ln(appropriation_other in state)"),
+          omit.stat = c("LL", "f", "ser", "adj.rsq","n"),
+          no.space = TRUE,
+          align = TRUE, 
+          type = 'html',
+          out =  "1ststage.html")
+```
+
+![Panel A - OLS & Second Stage](assets/images/ols_2nd_stage.png)
+
+# KEY NOTES
+
+I don't get the same result for everything and have not figured out the reasons.
+
+- I got a slightly different number of observations for non-research group, hence the estimation for this group comes differently too.
+
+- My estimation for 1st stage also has problem
+
+- All the R^2^ come different from that in the article
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
