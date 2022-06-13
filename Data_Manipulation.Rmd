@@ -10,16 +10,125 @@ output:
 monofont: 'Consolas' #How to find other fonts?
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+\newpage
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+# PACKAGES in R
+## Install packages
+- Sources of packages:
+  + CRAN repository: Packages here are at least reviewed by someone before being published
+  + install directly from **github**: In github, we can find the latest packages or sometimes even those that have not been published in the official repository, these packages are **NOT reviewed by anyone**. Hence, there is no guarantee that the package works.
+
+- Syntax: *install.packages("tidyverse")*
+  + *tidyverse* is the name of the package.
+  + replace *tidyverse* by any other name.
+  
+- From **github**
+  + *remotes::install_github("user/repository")*
+  + *user* is the one who posted the package
+  + *repository* is the name of the package
+
+## Use packages in R
+- Syntax: *package_name::function_name()*. This is the best way to call.
+- using *library()*. This is used when you use a lot of different functions from the same package in your script. You load the library for once, and then you do not need to call the name of the package whenever you use the functions from the packages.
+
+# IMPORTING, EXPORTING, SELECTING
+## Importing
+- Before, there are different ways to deal with importing, depending on which type of file you want to import
+- **rio** package helps to reduce the workload. It allows more than 30 different datafile format, e.g. csv, excel, SAS, SPSS, Stata, matlab, json, etc.
+- syntax: *rio::import("")*
+- We can use the example with 2 datafiles as below. This is PISA survey (2018) from OECD website.
+  + cy07_msu_sch_qqq.sas7bdat: SAS format
+  + CY07_MSU_SCH_QQQ.sav: SPSS file
 
 ```{r}
-plot(cars)
+# Dataset in SAS format
+pisa_sas <- rio::import("data/cy07_msu_sch_qqq.sas7bdat")
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+```{r}
+# Dataset in SPSS format
+pisa_spss <- rio::import("data/CY07_MSU_SCH_QQQ.sav")
+```
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+## Exporting
+- We can use base function or **rio** package
+- Base function:
+  + syntax: *saveRDS(object,"path/file.Rds")*
+  + this is standard format to save data in R. This avoids loss of information.
+- However, if you want to export data to some other format (e.g. excel), use *rio* package:
+  + syntax: *rio::export(object,"path/file.xlsx")*
+  + we can replace *xlsx* by other formats
+- Example (with data used in **importing** section):
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+saveRDS(pisa_sas, "data/pisa_sas.Rds")
+```
+
+```{r}
+#saving to excel file
+rio::export(pisa_sas, "data/pisa_sas.xlsx")
+```
+
+```{r}
+#saving for STATA
+rio::export(pisa_sas, "data/pisa_sas.dta")
+```
+
+## Selecting
+- For now, you can just copy the code below and run (We are simulating a dataset, which we learn later in details)
+
+```{r}
+set.seed(123)
+df <- data.frame(id = c(1:20),
+                     name = stri_rand_strings(n = 20, length = 7, pattern = "[A-Za-z0-9]"),
+                     class = sample(x=c("A", "B", "C"), size = 20, replace = TRUE, prob = c(0.3,0.3,0.4)),
+                     gender = sample(x = c("female","male"), size = 20, replace = TRUE, prob = c(0.5,0.5)),
+                     district = sample(x = c(3:8), size = 20, replace = TRUE, prob = c(0.2,0.1,0.25,0.15,0.2,0.1)),
+                     campus = sample(x = c("Yes","No"), size = 20, replace = TRUE, prob = c(0.3,0.7)),
+                     transport = sample(x = c("shuttle bus", "bicycle", "car"), size = 20, replace = TRUE, prob = c(0.55,0.2,0.25)),
+                     math = round(rnorm(n = 20, mean = 7.2, sd = 0.6), 1),
+                     english = round(rnorm(n = 20, mean = 8.1, sd = 0.5), 1)
+)
+View(df)
+```
+
+- We are going to get 4 columns: *id, name, class, math*. There are 2 ways:
+  + Base function in R:
+  
+```{r}
+df1 <- df[, c("id","name", "class", "math")]
+#or:
+df1 <- df[, c(1:3,8)]
+```
+
+  + use package **dplyr**
+
+```{r}
+df2 <- dplyr::select(df, id, name, class, math)
+```
+
+#EXAMINING DATA
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
