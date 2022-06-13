@@ -108,7 +108,21 @@ df2 <- dplyr::select(df, id, name, class, math)
 ```
 
 #EXAMINING DATA
-## View
+## Data structure and data type
+Some popular data types: integer, numeric, character, logical (boolean), complex
+### Logical or boolean data type
+- only 2 values **TRUE** or **FALSE** (in syntax we can use **T** or **F**)
+  
+
+```{r}
+#Overally check data type of dataframe
+str(df)
+```
+
+## data types
+
+# BASIC STATISTICS
+
 
 
 
