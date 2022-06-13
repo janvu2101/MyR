@@ -108,7 +108,7 @@ df2 <- dplyr::select(df, id, name, class, math)
 ```
 
 #EXAMINING DATA
-
+## View
 
 
 
