@@ -170,6 +170,8 @@ nchar(x_string) #22
 ```{r}
 length(df) #return number of column in the df
 length(df$name) #return number of row (obs) in the df
+length(unique())
+dplyr::n_distinct()
 ```
 
 ## Data frame
@@ -223,10 +225,12 @@ rm(df1,df2)
   + using base function:
 
 ```{r}
-#remove 1 column
+#select 1 column
 df1 <- df[, "name"]
-#remove multiple column
+#select multiple column
 df1 <- df[, names(df) %in% c("transport","district")]
+#remove multiple column
+df[, names(df) %in% c("transport","district")] <- NULL
 ```
 
   + using **tidyverse** package:
@@ -250,7 +254,7 @@ names(df1) <- c("id","full_name","class","gender","district","campus","transport
 df1 <-dplyr::rename(df1, full_name = name)
 #multiple columns:
 df1 <- dplyr::rename(df1,
-                     full_name = nnames,
+                     full_name = names,
                      sex = gender)
 ```
 
@@ -266,6 +270,123 @@ df1 <- dplyr::rename_with(df1,toupper)
 df <- df[sample(nrow(df), 5000), ] #5000 random rows you want to extract
 ```
 
+## Gather data
+
+```{r}
+#Simulate data
+set.seed(123)
+df <- data.frame(id = c(1:10),
+                 name = stringi::stri_rand_strings(n = 10, length = 7, pattern = "[A-Za-z0-9]"),
+                 y1999 = round(rnorm(n=10, mean = 11, sd = 4), 1),
+                 y2000 = round(rnorm(n=10, mean = 12.4, sd = 3.3), 1)
+                 )
+#Gather data
+df <- tidyr::gather(df, key = "year", value = "rating", y1999:y2000)
+```
+
+## Spreading data
+
+```{r}
+df <- tidyr::spread(df, key = "year", value = "wage")
+```
+
+## Cleaning data
+- This includes *filter()*, *mutate()*, *summarize()*, *arrange()*, *group_by()*
+- We use below data simulation:
+
+```{r}
+set.seed(123)
+df <- data.frame(id = c(1:20),
+                 name = stringi::stri_rand_strings(n = 20, length = 7, pattern = "[A-Za-z0-9]"),
+                 class = sample(x=c("A", "B", "C"), size = 20, replace = TRUE, prob = c(0.3,0.3,0.4)),
+                 gender = sample(x = c("female","male"), size = 20, replace = TRUE, prob = c(0.5,0.5)),
+                 district = sample(x = c(3:8), size = 20, replace = TRUE, prob = c(0.2,0.1,0.25,0.15,0.2,0.1)),
+                 campus = sample(x = c("Yes","No"), size = 20, replace = TRUE, prob = c(0.3,0.7)),
+                 transport = sample(x = c("shuttle bus", "bicycle", "car"), size = 20, replace = TRUE, prob = c(0.55,0.2,0.25)),
+                 math = round(rnorm(n = 20, mean = 7.2, sd = 0.6), 1),
+                 english = round(rnorm(n = 20, mean = 8.1, sd = 0.5), 1)
+)
+```
+
+### filter()
+- Some useful operators: **&, |, ==, !=, <, >, <=, >=**
+```{r}
+#Base R
+df1 <- df[df$district == 3, ]
+df1 <- df[(df$district == 3) | (df$district == 8), ]
+#tidyverse
+df1 <- dplyr::filter(df, district == 3 | district == 8)
+```
+- If you filter with & condition using **tidyverse**, you don't need to use the operator **&**, just separate the conditions by comma
+
+### mutate()
+- This is to create a new variable in a dataset
+
+```{r}
+df1 <- dplyr::mutate(df, average = ((math + english) / 2))
+```
+
+### arrange()
+
+```{r}
+#Base R: decendent by math and ascendent by english
+df1 <- df[order(df[, "english"], -df[, "math"]), ]
+#tidyverse
+df2 <- dplyr::arrange(df, english, -math)
+```
+
+### group_by()
+
+```{r}
+#Base R: 
+aggregate(math ~ class, df, mean)
+#tidyverse:
+df %>% group_by(class) %>% summarize(mean = mean(math))
+```
+
+### Recode variable
+
+```{r}
+#Base R:
+
+#tidyverse
+df$gender <- dplyr::recode(df$gender, "female" = 1, "male" = 0)
+```
+
+### summarize()
+- Some popular summary statistics functions: *mean()*, *median()*, *sd()*, *cor()*, *quantile()*, *IQR()*, *table()*
+- If you want to exclude the missing value, use **na.rm = TRUE**
+
+```{r}
+table(df$district)
+tmp <-  as.data.frame(table(df$district))
+rio::export(tmp, "data/district.xlsx")
+```
+
+## Missing values
+- Identify missing values:
+
+```{r}
+#see what cases are missing
+df_missing <- is.na(df$class)
+#count numbers of cases that are missing
+table(df_missing)
+```
+
+- Removing missing values:
+
+```{r}
+df <- df[complete.cases(df), ]
+# OR
+df <- df[!is.na(df$class), ]
+```
+
+- Recode missing values:
+
+```{r}
+#Base R
+df[df$gender == ]
+```
 
 # BASIC STATISTICS
 
