@@ -327,12 +327,20 @@ df1 <- dplyr::mutate(df, average = ((math + english) / 2))
 ```
 
 ### arrange()
+- Arrange the rows
 
 ```{r}
 #Base R: decendent by math and ascendent by english
 df1 <- df[order(df[, "english"], -df[, "math"]), ]
 #tidyverse
 df2 <- dplyr::arrange(df, english, -math)
+```
+
+- Arrange the columns
+
+```{r}
+#We use select() with everything() argument
+df3 <- dplyr::select(df, english, math, everything())
 ```
 
 ### group_by()
@@ -385,7 +393,7 @@ df <- df[!is.na(df$class), ]
 
 ```{r}
 #Base R
-df[df$gender == ]
+#df[df$gender == ]
 ```
 
 # BASIC STATISTICS
