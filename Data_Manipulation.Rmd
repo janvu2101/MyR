@@ -264,6 +264,17 @@ df1 <- dplyr::rename(df1,
 df1 <- dplyr::rename_with(df1,toupper)
 ```
 
+## Value labels:
+
+```{r}
+#Check factor levels:
+levels(df$gender) # "female male" meaning female is assigned as 1 and male is assigned as 2 (alphabetical order)
+nlevels(df$gender)
+
+#Change factor levels:
+df$gender <- factor(x=df$gender,levels=c("male","female")) # now male is assigned as 1
+```
+
 ## Extract a random sample from a dataframe
 
 ```{r}
@@ -348,6 +359,9 @@ df3 <- dplyr::select(df, english, math, everything())
 ```{r}
 #Base R: 
 aggregate(math ~ class, df, mean)
+mean <- tapply(df$math, df$gender, mean)
+sd <- tapply(df$math, df$gender, sd)
+cbind(mean,sd)
 #tidyverse:
 df %>% group_by(class) %>% summarize(mean = mean(math))
 ```
@@ -398,9 +412,45 @@ df <- df[!is.na(df$class), ]
 
 # BASIC STATISTICS
 
+```{r}
+set.seed(123)
+df <- data.frame(id = c(1:20),
+                 name = stringi::stri_rand_strings(n = 20, length = 7, pattern = "[A-Za-z0-9]"),
+                 class = sample(x=c("A", "B", "C"), size = 20, replace = TRUE, prob = c(0.3,0.3,0.4)),
+                 gender = sample(x = c("female","male"), size = 20, replace = TRUE, prob = c(0.5,0.5)),
+                 district = sample(x = c(3:8), size = 20, replace = TRUE, prob = c(0.2,0.1,0.25,0.15,0.2,0.1)),
+                 campus = sample(x = c("Yes","No"), size = 20, replace = TRUE, prob = c(0.3,0.7)),
+                 transport = sample(x = c("shuttle bus", "bicycle", "car"), size = 20, replace = TRUE, prob = c(0.55,0.2,0.25)),
+                 math = round(rnorm(n = 20, mean = 7.2, sd = 0.6), 1),
+                 english = round(rnorm(n = 20, mean = 8.1, sd = 0.5), 1)
+)
+```
 
+## Categorical data: frequencies/crosstabs
 
+```{r}
+#two-way table
+df1 <- table(df$gender,df$class)
+df1
+addmargins(df1) #add sum of rows and column
+round(prop.table(df1,1)) #proportion by rows and round to 1 digits
+round(prop.table(df1,2)) #proportion by columns and round to 1 digits
+chisq.test(df1) #H0: no relationship
+fisher.test(df1) #H0: no relationship
+```
 
+```{r}
+#three-way crosstabs
+df2 <- xtabs(~gender+class+campus, df)
+df2
+ftable(df2)
+```
+
+```{r}
+
+```
+
+## Descriptive statistics
 
 
 
